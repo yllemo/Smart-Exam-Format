@@ -8,37 +8,48 @@ The **Smart Exam Format** is a structured plain text format for representing mul
 ### Questions:
 - Each question starts with the question text.
 - Any line that does not start with a hyphen (`-`) or a bracket (`[ ]`) and is not blank is considered a new question.
-- Images can be embedded into questions using Markdown-style image syntax: `[]()` or `![]()`.
+- Images can be embedded into questions using Markdown-style image syntax: `[]()` or `![]()` with generic links, such as `[Image](https://example.com/image.png)`.
 
 ### Answers:
 - Each answer option begins with a hyphen (`-`).
 - Correct answers are marked with a hyphen followed by an asterisk (`-*`).
 - After the exam is completed, user-selected answers will be marked with `[ * ]` before the hyphen, while unselected answers will be marked with `[ ]`.
 
-### Answer Markings:
-- **Correct answers** are always marked with `-*` after the answer option.
-- **User selections** are marked as follows:
-  - Selected Correct Answer: `[ * ] -*`
-  - Unselected Correct Answer: `[ ] -*`
-  - Selected Incorrect Answer: `[ * ] -`
-  - Unselected Incorrect Answer: `[ ] -`
+### Two States of the Smart Exam Format:
+There are two distinct states for the **Smart Exam Format**:
+1. **Input State (Exam File)**: This is the original exam format used as input, containing questions and answers. In this state, there are no brackets (`[ ]`) around the answers, and only correct answers are marked with `-*`.
+2. **Executed State (User Responses)**: After the exam is completed and user answers are submitted for analysis, the user's selections are marked with brackets (`[ ]`). The correct answers remain marked with `-*`.
 
-### Separation:
-- Blank lines are used to separate different questions for clarity and readability.
-
-## Example
-
-### Input Example
-
-Below is an example of the **Smart Exam Format** in plain text:
+### Input State (Exam File):
+This is what the exam file looks like before user execution:
 
 ```
-What is 2 + 2? [Image here](https://marinegeo.github.io/assets/img/MarineGEO_logo.png)
-[ * ] -* 4
-[ ] - 3
-[ ] - 5
+What is 2 + 2? [Image here](https://example.com/image.png)
+- 4
+- 3
+-* 5
 
-What is the capital of France? [See Image 1.1](https://assets.digitalocean.com/articles/alligator/boo.svg)
+What is the capital of France? [See Image 1.1](https://example.com/image2.png)
+-* Paris
+- Berlin
+- Madrid
+
+What is 5 + 5?
+- 9
+-* 10
+-* 11
+```
+
+### Executed State (User Responses):
+After the exam has been completed and submitted, the user's selections are reflected as shown:
+
+```
+What is 2 + 2? [Image here](https://example.com/image.png)
+[ * ] - 4
+[ ] - 3
+[ ] -* 5
+
+What is the capital of France? [See Image 1.1](https://example.com/image2.png)
 [ * ] -* Paris
 [ ] - Berlin
 [ ] - Madrid
@@ -46,43 +57,21 @@ What is the capital of France? [See Image 1.1](https://assets.digitalocean.com/a
 What is 5 + 5?
 [ ] - 9
 [ * ] -* 10
-[ * ] -* 10
-```
-
-### After User Completion Example
-
-If a user completes the exam, their selections would appear like this:
-
-```
-What is 2 + 2? [Image here](https://marinegeo.github.io/assets/img/MarineGEO_logo.png)
-[ * ] -* 4
-[ ] - 3
-[ ] - 5
-
-What is the capital of France? [See Image 1.1](https://assets.digitalocean.com/articles/alligator/boo.svg)
-[ * ] -* Paris
-[ ] - Berlin
-[ ] - Madrid
-
-What is 5 + 5?
-[ ] - 9
-[ * ] -* 10
-[ * ] -* 10
+[ * ] -* 11
 ```
 
 ## Features
 
 - **Correct Answers**: Correct answers are marked with `-*` after the answer option, making it easy to differentiate correct answers from incorrect ones.
 - **User Selections**: After the exam, user-selected answers are marked with `[ * ]`, and unselected answers are marked with `[ ]`.
-- **Support for Images**: You can include images within the question section using Markdown-style syntax. This allows for richer questions with visual aids or references.
-  - Example: `![Alt Text](image-url)` or `[Alt Text](image-url)`
-  
+- **Support for Images**: You can include images within the question section using Markdown-style syntax with generic links, such as `[Image](https://example.com/image.png)`.
+
   Example with image:
   ```
-  What is 2 + 2? [Image here](https://marinegeo.github.io/assets/img/MarineGEO_logo.png)
-  [ * ] -* 4
-  [ ] - 3
-  [ ] - 5
+  What is 2 + 2? [Image here](https://example.com/image.png)
+  - 4
+  - 3
+  -* 5
   ```
 
 - **Multiple Correct Answers**: The format supports questions with either single or multiple correct answers.
