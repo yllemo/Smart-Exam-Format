@@ -1,28 +1,23 @@
 
-# AI Generated Questions Examples
+from pathlib import Path
 
-This guide explains how to use a manual prompt generation process to create AI-generated questions without relying on API calls. 
-This is useful for users who want to manually generate prompts for input into generic AI tools like ChatGPT, Copilot, or Google Gemini.
+def load_answers_from_file(file_path):
+    """Load answers from SEF answer file."""
+    if not Path(file_path).is_file():
+        raise FileNotFoundError(f"The file '{file_path}' was not found.")
+    with open(file_path, 'r') as file:
+        return file.readlines()
 
-## Process Overview
+def extract_exam_text(answers):
+    """Format the answers text as a single string for AI input."""
+    return "".join(answers).strip()
 
-1. **Prepare Your SEF Exam Result**:
-   Start with the output of a completed exam in the Smart Exam Format (SEF), highlighting user responses to each question.
+def generate_instruction_text(file_path):
+    """Generate instructions for a new exam based on missed topics from a file."""
+    answers = load_answers_from_file(file_path)
+    exam_text = extract_exam_text(answers)
 
-2. **Generate Instructions for the AI Tool**:
-   Use a manual instruction generation process to format the SEF results as a prompt. Follow the format provided below for a ready-to-use prompt that can be copied and pasted into a generic AI tool.
-
-3. **Structure Your Prompt for AI Input**:
-   The AI will generate new questions based on missed topics or areas that need reinforcement, as specified in the prompt.
-
-## Example Prompt Template
-
-Here is an example of a prompt template based on the SEF exam output, which you can adapt for your AI tool.
-
----
-
-**Prompt Template for Generating New Smart Exam Questions**:
-
+    instructions = f"""
 Create a new exam based on the Smart Exam Format, using the information provided below.
 
 ### Smart Exam Format:
@@ -62,24 +57,17 @@ What is the capital of France?
 [ ] - Madrid
 \```
 
+Additional Notes:
+- Correct Answers: Correct answers are marked with -* after the answer option.
+- User Selections: After the exam is executed, user-selected answers will be marked with [ * ], and unselected answers will be marked with [ ].
+- Question Separation: Blank lines separate each question to maintain clarity.
+- Format Flexibility: The format supports both single and multiple correct answers for each question.
+
 ### Previous Exam:
-Below is the previous exam to use as input for creating a new exam:
+Below is the previous exam to use as input. Create a new exam based on this structure:
 
 \```
-What is 2 + 2?
-[ * ] -* 4
-[ ] - 3
-[ ] - 5
-
-What is the capital of France?
-[ * ] -* Paris
-[ ] - Berlin
-[ ] - Madrid
-
-What is 5 + 5?
-[ * ] - 9
-[ ] -* 10
-[ ] - 11
+{exam_text}
 \```
 
 ### Instructions:
@@ -88,11 +76,21 @@ What is 5 + 5?
 - Do not include brackets [] in this new exam, as they are only used to reference user selections.
 
 Format the output as markdown.
+"""
+    return instructions.strip()
 
----
+if __name__ == "__main__":
+    import sys
 
-## Notes
-- This prompt template is designed to be copied directly into an AI tool for creating a new set of questions.
-- The process uses plain text without API calls, making it suitable for manual operations.
+    # Check if a file path is provided, otherwise prompt the user to enter one
+    if len(sys.argv) < 2:
+        file_path = input("Please enter the path to your SEF answer file: ").strip()
+    else:
+        file_path = sys.argv[1]
 
----
+    try:
+        result = generate_instruction_text(file_path)
+        print("Copy this prompt into any AI tool:")
+        print(result)
+    except FileNotFoundError as e:
+        print(e)
