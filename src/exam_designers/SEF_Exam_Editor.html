@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEF Exam Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .textarea {
+            width: 400px;
+            height: 200px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            resize: vertical;
+            color: #e0e0e0;
+            background-color: #1e1e1e;
+        }
+        #textarea1 {
+            background-color: #2c2c2c; /* Dark gray for first textarea */
+        }
+        #textarea2 {
+            background-color: #383838; /* Slightly lighter dark gray for second textarea */
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #555;
+        }
+        .top-row {
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <textarea id="textarea1" class="textarea" placeholder="Paste or type the exam content here..."></textarea>
+
+        <div class="buttons">
+            <button class="btn" onclick="parseExam()">1. Parse</button>
+            <button class="btn" onclick="addQuestion()">2. Add Question</button>
+            <button class="btn" onclick="copyToClipboard()">3. Copy Exam</button>
+            <button class="btn" onclick="saveExam()">4. Save Exam</button>
+        </div>
+
+        <textarea id="textarea2" class="textarea" placeholder="Parsed or copied exam content will appear here..."></textarea>
+    </div>
+
+    <script>
+        // Parse function: Remove blank lines, add "- " to non-blank, non-first lines
+        function parseExam() {
+            const content = document.getElementById('textarea1').value;
+            if (!content.trim()) {
+                alert("Please enter some exam content to parse.");
+                return;
+            }
+            const lines = content.split("\n");
+            const parsedLines = lines.filter(line => line.trim() !== "") // Remove blank lines
+                                     .map((line, index) => {
+                                         line = line.trim();
+                                         if (index !== 0 && !line.startsWith("- ")) {
+                                             return "- " + line;
+                                         }
+                                         return line;
+                                     });
+            document.getElementById('textarea1').value = parsedLines.join("\n");
+        }
+
+        // Add Question function: Append first textarea content to the second textarea, ensuring a blank line between
+        function addQuestion() {
+            const content1 = document.getElementById('textarea1').value;
+            let content2 = document.getElementById('textarea2').value;
+            
+            // Ensure there's a blank line at the end of textarea2 before appending
+            if (content2.trim() !== "" && !content2.endsWith("\n\n")) {
+                content2 += "\n";
+            }
+            
+            document.getElementById('textarea2').value = content2 + content1.trim() + "\n\n"; // Append with a single blank line
+            document.getElementById('textarea1').value = ""; // Clear the first textarea
+        }
+
+        // Copy Exam function: Copy content from second textarea to clipboard
+        function copyToClipboard() {
+            const content = document.getElementById('textarea2').value;
+            navigator.clipboard.writeText(content).then(() => {
+                alert("Exam copied to clipboard.");
+            }).catch(err => {
+                alert("Failed to copy: " + err);
+            });
+        }
+
+        // Save Exam function: Save content from second textarea as a .txt file with formatted date
+        function saveExam() {
+            const content = document.getElementById('textarea2').value;
+            if (!content.trim()) {
+                alert("There is nothing to save.");
+                return;
+            }
+
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0]; // yyyy-mm-dd format
+            const filename = `Smart_Exam_${formattedDate}.txt`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>
