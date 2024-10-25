@@ -1,0 +1,245 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEF Basic Exam Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1d1f21;
+            color: #c5c8c6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: #282a2e;
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #81a2be;
+        }
+        .question {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .answer {
+            margin: 5px 0;
+            padding: 8px;
+            background-color: #373b41;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .answer.correct {
+            background-color: #5cb85c;
+        }
+        .answer.wrong {
+            background-color: #d9534f;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #81a2be;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+        #outputContainer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SEF Basic Exam Simulator</h1>
+        <!-- This simulator is built to handle exams in the Smart Exam Format (SEF).
+             The SEF is a structured plain text format for representing multiple-choice questions and their answers.
+             More details can be found at https://github.com/yllemo/Smart-Exam-Format -->
+        <input type="file" id="fileInput" accept=".txt">
+        <div id="examContainer"></div>
+        <div class="controls">
+            <button class="btn" id="prevBtn" onclick="prevQuestion()" disabled>Previous</button>
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Next</button>
+            <button class="btn" id="endExamBtn" onclick="endExam()" disabled>End Exam</button>
+        </div>
+        <div id="result"></div>
+        <button class="btn" id="copyBtn" onclick="copyToClipboard()" style="display: none;">Copy to Clipboard</button>
+        <button class="btn" id="saveBtn" onclick="saveResult()" style="display: none;">Save Result</button>
+        <div id="outputContainer" style="display: none;"></div>
+    </div>
+
+    <script>
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let correctAnswers = 0;
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    parseSEF(e.target.result);
+                };
+                reader.readAsText(file);
+
+                // Reset state for a new exam
+                document.getElementById('result').innerText = '';
+                document.getElementById('outputContainer').style.display = 'none';
+                document.getElementById('copyBtn').style.display = 'none';
+                document.getElementById('saveBtn').style.display = 'none';
+                currentQuestionIndex = 0;
+                correctAnswers = 0;
+            }
+        });
+
+        function parseSEF(content) {
+            questions = [];
+            let lines = content.split('\n');
+            let currentQuestion = null;
+            const correctMarker = "-*";
+            lines.forEach(line => {
+                line = line.trim();
+                if (line && !line.startsWith('-') && !line.startsWith('[')) {
+                    if (currentQuestion) questions.push(currentQuestion);
+                    currentQuestion = { text: line, answers: [], correctAnswers: [], userSelection: null };
+                } else if (line.startsWith('-')) {
+                    let isCorrect = line.includes(correctMarker);
+                    let answerText = line; // Retain original format including "- " or "-* "
+                    currentQuestion.answers.push({ text: answerText, isCorrect: isCorrect });
+                }
+            });
+            if (currentQuestion) questions.push(currentQuestion);
+            loadQuestion();
+            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('endExamBtn').disabled = false;
+        }
+
+        function loadQuestion() {
+            const container = document.getElementById('examContainer');
+            container.innerHTML = '';
+            const question = questions[currentQuestionIndex];
+
+            const questionElem = document.createElement('div');
+            questionElem.classList.add('question');
+            questionElem.innerText = question.text;
+            container.appendChild(questionElem);
+
+            question.answers.forEach((answer, index) => {
+                const answerElem = document.createElement('div');
+                answerElem.classList.add('answer');
+                answerElem.innerText = answer.text.replace(/^(-\*?\s*)/, ""); // Display without "- " or "-* "
+                answerElem.onclick = () => selectAnswer(answerElem, answer, index);
+                container.appendChild(answerElem);
+            });
+        }
+
+        function selectAnswer(element, answer, index) {
+            const question = questions[currentQuestionIndex];
+            question.userSelection = index;
+            if (answer.isCorrect) {
+                element.classList.add('correct');
+                correctAnswers++;
+            } else {
+                element.classList.add('wrong');
+            }
+            disableAnswers();
+        }
+
+        function disableAnswers() {
+            document.querySelectorAll('.answer').forEach(elem => elem.onclick = null);
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+                document.getElementById('prevBtn').disabled = false;
+            }
+            if (currentQuestionIndex === questions.length - 1) {
+                document.getElementById('nextBtn').disabled = true;
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+                document.getElementById('nextBtn').disabled = false;
+            }
+            if (currentQuestionIndex === 0) {
+                document.getElementById('prevBtn').disabled = true;
+            }
+        }
+
+        function endExam() {
+            const container = document.getElementById('examContainer');
+            container.innerHTML = '';
+            let outputText = '';
+
+            questions.forEach(question => {
+                outputText += question.text + '\n';
+                question.answers.forEach((answer, index) => {
+                    let marker = '[]';
+                    if (question.userSelection === index) marker = '[*]';
+                    outputText += `${marker} ${answer.text}\n`;
+                });
+                outputText += '\n';
+            });
+
+            document.getElementById('outputContainer').innerText = outputText;
+            document.getElementById('outputContainer').style.display = 'block';
+            document.getElementById('copyBtn').style.display = 'inline-block';
+            document.getElementById('saveBtn').style.display = 'inline-block';
+
+            const totalQuestions = questions.length;
+            const score = Math.round((correctAnswers / totalQuestions) * 100);
+            document.getElementById('result').innerText = `Exam Completed! Score: ${score}%`;
+
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('endExamBtn').disabled = true;
+            document.getElementById('prevBtn').disabled = true;
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById('outputContainer').innerText;
+            navigator.clipboard.writeText(outputText).then(() => {
+                alert("Copied to clipboard!");
+            });
+        }
+
+        function saveResult() {
+            const outputText = document.getElementById('outputContainer').innerText;
+            const date = new Date().toISOString().split('T')[0]; // Get date in yyyy-mm-dd format
+            const filename = `Smart_Exam_${date}.txt`;
+            const blob = new Blob([outputText], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>

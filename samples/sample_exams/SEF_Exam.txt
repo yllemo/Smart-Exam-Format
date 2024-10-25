@@ -1,0 +1,48 @@
+What is the Smart Exam Format (SEF)?
+- A structured plain text format for multiple-choice questions
+-* A format for representing questions and answers in plain text
+- A type of AI model
+
+What is the primary file format used in SEF?
+-* .txt
+- .pdf
+- .docx
+
+How are questions separated in SEF?
+- By commas
+-* By blank lines
+- By hyphens
+
+What symbol is used to indicate an answer option in SEF?
+-* - (hyphen)
+- * (asterisk)
+- + (plus)
+
+How are correct answers marked in SEF?
+- By using brackets
+- By underlining the answer
+-* By a hyphen followed by an asterisk (-*)
+
+Can SEF support multiple correct answers?
+-* Yes
+- No
+
+How are user-selected answers indicated after an exam is completed?
+-* With brackets containing asterisks (e.g., [*])
+- With a hashtag
+- By highlighting the answer
+
+What is the difference between the Input and Executed states in SEF?
+-* Input state is the original exam, Executed state includes user selections
+- Input state is handwritten, Executed state is typed
+- Input state has questions only, Executed state has answers only
+
+How can images be included in SEF questions?
+-* Using Markdown-style syntax (e.g., [Image](URL))
+- Embedding directly in HTML
+- By adding as attachments
+
+What kind of file is SEF most suitable for?
+-* Plain text files
+- Image files
+- Video files

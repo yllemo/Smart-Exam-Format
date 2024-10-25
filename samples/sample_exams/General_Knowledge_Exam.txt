@@ -1,0 +1,49 @@
+What is the capital of France?
+-* Paris
+- Berlin
+- Rome
+
+What is 2 + 2?
+-* 4
+- 3
+- 5
+
+What color is the sky on a clear day?
+-* Blue
+- Green
+- Red
+
+How many continents are there?
+- 5
+-* 7
+- 8
+
+What is the largest planet in our Solar System?
+-* Jupiter
+- Mars
+- Earth
+
+What is H2O commonly known as?
+-* Water
+- Air
+- Hydrogen
+
+How many days are in a leap year?
+-* 366
+- 364
+- 365
+
+What is the boiling point of water at sea level in Celsius?
+-* 100
+- 90
+- 120
+
+Which animal is known as the King of the Jungle?
+-* Lion
+- Tiger
+- Elephant
+
+Who wrote "Romeo and Juliet"?
+-* William Shakespeare
+- Charles Dickens
+- Mark Twain
