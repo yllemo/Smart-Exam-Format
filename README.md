@@ -76,7 +76,7 @@ What is 5 + 5?
 
 - **Multiple Correct Answers**: The format supports questions with either single or multiple correct answers.
   
-## Notes:
+## Notes
 
 - **Flexibility**: The Smart Exam Format is designed to be flexible, allowing for both human and machine readability. It can be easily parsed by a program while still being understandable to a person reading the file.
 - **Blank Line Separation**: Each question is separated by a blank line for clarity, making it easier to distinguish between questions.
@@ -90,6 +90,27 @@ The **Smart Exam Format** is ideal for:
 - Importing/exporting questions and answers between systems.
 - Creating quizzes with images embedded in the questions to provide visual context or references.
 
+## AI Integration
+
+The **Smart Exam Format** is enhanced through AI integration, enabling:
+- **Question Generation**: AI can generate new questions based on past exam results, aiding in continuous learning.
+- **Result Analysis**: AI can suggest new questions focusing on topics where users frequently make mistakes, implementing a "diminishing returns" strategy.
+- **Prompts for AI Models**: Example prompts and guidance are provided for various AI models, including ChatGPT, Copilot, Google Gemini, and local models (e.g., LM Studio, Ollama).
+
+Refer to the `docs/ai_integration/` folder for prompt examples and guidance on using APIs and local models.
+
+## Folder Structure
+
+- **`src/parsers/`**: Parsing scripts for Smart Exam Format files.
+- **`src/exam_simulators/`**: Web and desktop simulators with a focus feature for incorrect answers.
+- **`src/cli_tools/`**: Command-line tools for interacting with the format.
+- **`samples/sample_exams/`**: Sample exams demonstrating both Input and Executed states.
+- **`samples/ai_generated_questions/`**: Example AI-generated questions based on previous exam results.
+- **`analysis/export_formats/`**: Templates for result exports formatted for AI input.
+- **`analysis/result_analysis/`**: Scripts and notebooks for analyzing exam results.
+- **`docs/ai_integration/`**: AI prompt examples, API integration instructions, and local model usage.
+- **`tests/`**: Unit tests to validate functionality.
+
 ## How to Use
 
 1. Create a new `.txt` file or use any text editor to define your questions and answers in the **Smart Exam Format**.
@@ -98,7 +119,7 @@ The **Smart Exam Format** is ideal for:
 
 ## Example Repository
 
-You can find an example implementation for parsing the **Smart Exam Format** and processing user responses in the provided code within this repository. Feel free to clone this repository, experiment, and contribute improvements!
+This repository includes example implementations for parsing the **Smart Exam Format**, AI-enhanced question generation, and analysis of exam results. Clone, experiment, and contribute improvements!
 
 ---
 
