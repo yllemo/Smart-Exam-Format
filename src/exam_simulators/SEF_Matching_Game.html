@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Game</title>
+    <style>
+        /* Dark Mode Theme */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #00bcd4;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .upload-btn, .check-btn, .restart-btn {
+            padding: 10px 20px;
+            background-color: #00bcd4;
+            color: #121212;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .upload-btn:hover, .check-btn:hover, .restart-btn:hover {
+            background-color: #008ba3;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 1000px;
+            position: relative;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        .questions, .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px;
+            width: 45%;
+        }
+        .questions div, .answers div {
+            padding: 15px;
+            background-color: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            text-align: center;
+            color: #e0e0e0;
+            font-weight: bold;
+            cursor: grab;
+            transition: background-color 0.2s;
+        }
+        .questions div.matched, .answers div.matched {
+            background-color: #555; /* Darker color for matched elements */
+        }
+        .questions div:hover, .answers div:hover {
+            background-color: #444;
+        }
+        .line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Matching Game</h1>
+    <div class="button-container">
+        <input type="file" id="fileInput" class="upload-btn" accept=".txt">
+        <button class="check-btn" onclick="checkMatches()">Check Matches</button>
+        <button class="restart-btn" onclick="restartGame()">Restart</button>
+    </div>
+    <div class="container">
+        <div class="questions" id="questions"></div>
+        <canvas class="line-canvas" id="lineCanvas"></canvas>
+        <div class="answers" id="answers"></div>
+    </div>
+
+    <script>
+        let questionsList = [];
+        let answersList = [];
+        let pairs = []; // Store correct pairs for validation
+        let connections = []; // Store drawn connections
+        let canvas, ctx;
+
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                let content = e.target.result;
+                pairs = parseSmartExamFormat(content);
+                displayQuestionsAndAnswers(pairs);
+                setupCanvas();
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseSmartExamFormat(content) {
+            const questions = content.trim().split(/\n\s*\n/);
+            return questions.map(block => {
+                const lines = block.trim().split('\n');
+                const question = lines[0] || "No question available";
+                const correctAnswerLine = lines.find(line => line.startsWith('-*'));
+                const correctAnswer = correctAnswerLine ? correctAnswerLine.substring(3).trim() : "No correct answer provided";
+                return { question, answer: correctAnswer };
+            }).filter(pair => pair.question && pair.answer);
+        }
+
+        function displayQuestionsAndAnswers(pairs) {
+            const questionsContainer = document.getElementById('questions');
+            const answersContainer = document.getElementById('answers');
+            questionsContainer.innerHTML = '';
+            answersContainer.innerHTML = '';
+
+            questionsList = pairs.map(pair => pair.question);
+            answersList = pairs.map(pair => pair.answer).sort(() => Math.random() - 0.5);
+
+            questionsList.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.textContent = question;
+                questionDiv.dataset.index = index;
+                questionDiv.draggable = true;
+                questionDiv.ondragstart = (event) => handleDragStart(event, questionDiv);
+                questionsContainer.appendChild(questionDiv);
+            });
+
+            answersList.forEach((answer, index) => {
+                const answerDiv = document.createElement('div');
+                answerDiv.textContent = answer;
+                answerDiv.dataset.index = index;
+                answerDiv.ondragover = (event) => event.preventDefault();
+                answerDiv.ondrop = (event) => handleDrop(event, answerDiv);
+                answersContainer.appendChild(answerDiv);
+            });
+        }
+
+        function handleDragStart(event, questionElement) {
+            event.dataTransfer.setData("text", questionElement.dataset.index);
+            questionElement.style.opacity = "0.5"; // Visual feedback
+        }
+
+        function handleDrop(event, answerElement) {
+            event.preventDefault();
+            const questionIndex = event.dataTransfer.getData("text");
+            const questionElement = document.querySelector(`.questions div[data-index="${questionIndex}"]`);
+            questionElement.style.opacity = "1"; // Reset opacity
+
+            const questionText = questionElement.textContent;
+            const answerText = answerElement.textContent;
+
+            // Remove any existing connection for this question or answer
+            clearConnection(questionText, answerText);
+
+            // Store new connection
+            connections.push({ question: questionText, answer: answerText });
+
+            // Draw and highlight the connection
+            drawLine(questionElement, answerElement);
+            questionElement.classList.add('matched');
+            answerElement.classList.add('matched');
+        }
+
+        function clearConnection(questionText, answerText) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Remove connections where the question or answer matches
+            connections = connections.filter(conn => conn.question !== questionText && conn.answer !== answerText);
+
+            // Reset 'matched' styles for any question or answer no longer connected
+            [...document.querySelectorAll('.questions div'), ...document.querySelectorAll('.answers div')]
+                .forEach(el => el.classList.remove('matched'));
+
+            // Redraw all remaining connections
+            connections.forEach(conn => {
+                const startEl = [...document.querySelectorAll('.questions div')].find(el => el.textContent === conn.question);
+                const endEl = [...document.querySelectorAll('.answers div')].find(el => el.textContent === conn.answer);
+                if (startEl && endEl) drawLine(startEl, endEl);
+                startEl.classList.add('matched');
+                endEl.classList.add('matched');
+            });
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('lineCanvas');
+            canvas.width = document.querySelector('.container').offsetWidth;
+            canvas.height = document.querySelector('.container').offsetHeight;
+            ctx = canvas.getContext('2d');
+            ctx.lineWidth = 2;
+        }
+
+        function drawLine(startElement, endElement) {
+            const startRect = startElement.getBoundingClientRect();
+            const endRect = endElement.getBoundingClientRect();
+            const containerRect = document.querySelector('.container').getBoundingClientRect();
+
+            const startX = startRect.right - containerRect.left;
+            const startY = startRect.top + startRect.height / 2 - containerRect.top;
+            const endX = endRect.left - containerRect.left;
+            const endY = endRect.top + endRect.height / 2 - containerRect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = '#00bcd4';
+            ctx.stroke();
+        }
+
+        function checkMatches() {
+            connections.forEach(connection => {
+                const isCorrect = pairs.some(
+                    pair => pair.question === connection.question && pair.answer === connection.answer
+                );
+
+                const startElement = [...document.querySelectorAll('.questions div')]
+                    .find(el => el.textContent === connection.question);
+                const endElement = [...document.querySelectorAll('.answers div')]
+                    .find(el => el.textContent === connection.answer);
+
+                if (startElement && endElement) {
+                    drawColoredLine(startElement, endElement, isCorrect ? 'green' : 'red');
+                }
+            });
+        }
+
+        function drawColoredLine(startElement, endElement, color) {
+            const startRect = startElement.getBoundingClientRect();
+            const endRect = endElement.getBoundingClientRect();
+            const containerRect = document.querySelector('.container').getBoundingClientRect();
+
+            const startX = startRect.right - containerRect.left;
+            const startY = startRect.top + startRect.height / 2 - containerRect.top;
+            const endX = endRect.left - containerRect.left;
+            const endY = endRect.top + endRect.height / 2 - containerRect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
+
+        function restartGame() {
+            // Clear canvas, reset connections, and matched classes
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            connections = [];
+            document.querySelectorAll('.questions div, .answers div').forEach(el => el.classList.remove('matched'));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Exam Flashcards</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #f1f1f1;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #00bcd4;
+            margin-bottom: 20px;
+        }
+        .upload-btn {
+            padding: 10px 20px;
+            background-color: #00bcd4;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .flashcard-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 800px;
+        }
+        .flashcard {
+            width: 200px;
+            height: 300px;
+            background-color: #333;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            color: #f1f1f1;
+            font-size: 1em;
+            font-weight: bold;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .flashcard.flip {
+            transform: rotateY(180deg);
+        }
+        .flashcard .front, .flashcard .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            backface-visibility: hidden;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .flashcard .back {
+            transform: rotateY(180deg);
+            background-color: #444;
+            color: #00bcd4;
+        }
+        .flashcard img {
+            max-width: 100%;
+            max-height: 120px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .flashcard .text-content {
+            margin-top: 10px;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <h1>Smart Exam Flashcards</h1>
+    <input type="file" id="fileInput" class="upload-btn" accept=".txt">
+    <div id="flashcardContainer" class="flashcard-container"></div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                let content = e.target.result;
+                content = cleanUpContent(content); // Clean up content before parsing
+                const flashcards = parseSmartExamFormat(content);
+                displayFlashcards(flashcards);
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Function to clean up the content of the file
+        function cleanUpContent(content) {
+            return content.split('\n').map(line => {
+                if (line.trim().startsWith('[')) {
+                    return line.replace(/\[\s*\*?\s*\]\s*/g, '').replace(/^\s*-\s*/, '-').trim();
+                }
+                return line;
+            }).join('\n');
+        }
+
+        function parseSmartExamFormat(content) {
+            const questions = content.trim().split(/\n\s*\n/);  // Separate each question block by double line breaks
+            return questions.map(block => {
+                const lines = block.trim().split('\n');
+                const question = formatQuestion(lines[0] || "No question available");
+                const correctAnswerLine = lines.find(line => line.startsWith('-*'));
+                const correctAnswer = correctAnswerLine ? correctAnswerLine.substring(3).trim() : "No correct answer provided";
+                return { question, correctAnswer };
+            }).filter(flashcard => flashcard.question && flashcard.correctAnswer);
+        }
+
+        // Function to format question text with flexible image handling
+        function formatQuestion(text) {
+            const imageRegex = /!?\[(.*?)\]\((.*?)\)/g; // Matches both markdown formats: ![Alt Text](url) and [Alt Text](url)
+            let formattedText = text.replace(imageRegex, (match, altText, url) => `<img src="${url}" alt="${altText}">`);
+            return `<div class="text-content">${formattedText}</div>`; // Wraps text content for better styling control
+        }
+
+        function displayFlashcards(flashcards) {
+            const container = document.getElementById('flashcardContainer');
+            container.innerHTML = ''; // Clear any previous cards
+
+            flashcards.forEach(flashcard => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'flashcard';
+                cardElement.innerHTML = `
+                    <div class="front">
+                        ${flashcard.question}
+                    </div>
+                    <div class="back">
+                        <div class="text-content">${flashcard.correctAnswer}</div>
+                    </div>
+                `;
+                cardElement.addEventListener('click', () => {
+                    cardElement.classList.toggle('flip');
+                });
+                container.appendChild(cardElement);
+            });
+        }
+    </script>
+</body>
+</html>

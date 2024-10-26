@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .upload-btn {
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            background-color: #00bcd4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+        .questions, .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 10px;
+            width: 40%;
+        }
+        .questions div, .answers div {
+            padding: 10px;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .line-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Matching Game</h1>
+    <input type="file" id="fileInput" class="upload-btn" accept=".txt">
+    <div class="container">
+        <div class="questions" id="questions"></div>
+        <canvas class="line-canvas" id="lineCanvas"></canvas>
+        <div class="answers" id="answers"></div>
+    </div>
+
+    <script>
+        let questionsList = [];
+        let answersList = [];
+        let startElement = null;
+        let canvas, ctx;
+
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                let content = e.target.result;
+                const pairs = parseSmartExamFormat(content);
+                displayQuestionsAndAnswers(pairs);
+                setupCanvas();
+            };
+
+            reader.readAsText(file);
+        }
+
+        function parseSmartExamFormat(content) {
+            const questions = content.trim().split(/\n\s*\n/);
+            const pairs = questions.map(block => {
+                const lines = block.trim().split('\n');
+                const question = lines[0] || "No question available";
+                const correctAnswerLine = lines.find(line => line.startsWith('-*'));
+                const correctAnswer = correctAnswerLine ? correctAnswerLine.substring(3).trim() : "No correct answer provided";
+                return { question, answer: correctAnswer };
+            }).filter(pair => pair.question && pair.answer);
+
+            // Shuffle answers to make it challenging
+            questionsList = pairs.map(pair => pair.question);
+            answersList = pairs.map(pair => pair.answer).sort(() => Math.random() - 0.5);
+            return pairs;
+        }
+
+        function displayQuestionsAndAnswers(pairs) {
+            const questionsContainer = document.getElementById('questions');
+            const answersContainer = document.getElementById('answers');
+            questionsContainer.innerHTML = '';
+            answersContainer.innerHTML = '';
+
+            questionsList.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.textContent = question;
+                questionDiv.dataset.index = index;
+                questionDiv.onclick = () => handleSelection(questionDiv, 'question');
+                questionsContainer.appendChild(questionDiv);
+            });
+
+            answersList.forEach((answer, index) => {
+                const answerDiv = document.createElement('div');
+                answerDiv.textContent = answer;
+                answerDiv.dataset.index = index;
+                answerDiv.onclick = () => handleSelection(answerDiv, 'answer');
+                answersContainer.appendChild(answerDiv);
+            });
+        }
+
+        function handleSelection(element, type) {
+            if (type === 'question') {
+                startElement = element;
+            } else if (startElement) {
+                drawLine(startElement, element);
+                startElement = null; // Reset for the next selection
+            }
+        }
+
+        function setupCanvas() {
+            canvas = document.getElementById('lineCanvas');
+            canvas.width = document.querySelector('.container').offsetWidth;
+            canvas.height = document.querySelector('.container').offsetHeight;
+            ctx = canvas.getContext('2d');
+            ctx.strokeStyle = '#00bcd4';
+            ctx.lineWidth = 2;
+        }
+
+        function drawLine(startElement, endElement) {
+            const startRect = startElement.getBoundingClientRect();
+            const endRect = endElement.getBoundingClientRect();
+            const containerRect = document.querySelector('.container').getBoundingClientRect();
+
+            const startX = startRect.right - containerRect.left;
+            const startY = startRect.top + startRect.height / 2 - containerRect.top;
+            const endX = endRect.left - containerRect.left;
+            const endY = endRect.top + endRect.height / 2 - containerRect.top;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+    </script>
+</body>
+</html>
