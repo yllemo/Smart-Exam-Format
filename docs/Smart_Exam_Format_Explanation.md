@@ -9,7 +9,7 @@ The **Smart Exam Format (SEF)** is a structured way to represent multiple-choice
 
 SEF uses a simple, text-based format that can be stored as `.txt` files. These files can be read, edited, and shared easily across different devices and platforms. SEF’s structure is designed to be intuitive, while also supporting AI-powered feedback, making it ideal for adaptive and ongoing learning.
 
-[Smart Exam Format](docs/images/smart_exam_format_overview.png)
+![Smart Exam Format Overview](images/smart_exam_format_overview.png)
 
 ---
 
