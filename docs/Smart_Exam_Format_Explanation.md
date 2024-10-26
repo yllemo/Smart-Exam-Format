@@ -119,6 +119,26 @@ What is the color of the sky?
 
 ---
 
+## Including Images in SEF Questions
+
+To include images in SEF questions, you can use Markdown-style image syntax. The format is `![alt text](image-url)`. Both `![alt text](image-url)` with an exclamation mark and `[alt text](image-url)` without it are supported, making it flexible for various markdown tools and parsers.
+
+**Example of a Question with an Image**:
+```
+What does this animal look like?
+![A picture of a cat](https://example.com/cat-image.jpg)
+- Furry
+-* Friendly
+- Aloof
+```
+
+In this format:
+- The image will be displayed within the question text.
+- The `alt text` can describe the image for context.
+- Both `![ ]` and `[ ]` syntaxes are compatible.
+
+---
+
 ## Benefits of SEF’s Two-State Structure
 
 The two-state design of SEF has several advantages:
