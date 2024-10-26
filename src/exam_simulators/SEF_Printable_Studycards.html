@@ -3,74 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matching Game</title>
+    <title>Printable Studycards</title>
     <style>
         body {
+            background-color: #ffffff;
+            color: #000000;
+            font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
             margin: 0;
             padding: 20px;
         }
         h1 {
             color: #333;
-        }
-        .upload-btn {
-            padding: 10px 20px;
             margin-bottom: 20px;
+        }
+        .upload-btn, .print-btn {
+            padding: 10px 20px;
             background-color: #00bcd4;
-            color: white;
+            color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            margin: 10px;
         }
-        .container {
+        .studycard-container {
             display: flex;
-            justify-content: space-between;
-            width: 80%;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
             max-width: 800px;
-            position: relative;
         }
-        .questions, .answers {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding: 10px;
-            width: 40%;
-        }
-        .questions div, .answers div {
-            padding: 10px;
-            background-color: #ffffff;
+        .studycard {
+            width: 250px;
+            height: 350px;
+            background-color: #f8f8f8;
             border: 1px solid #ddd;
             border-radius: 5px;
-            text-align: center;
-            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+            page-break-inside: avoid;
         }
-        .line-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            pointer-events: none;
+        .question, .answer {
+            text-align: center;
+            font-size: 1.1em;
+        }
+        .dotted-line {
+            border-top: 1px dashed #999;
+            margin: 20px 0;
+        }
+        @media print {
+            .upload-btn, .print-btn {
+                display: none;
+            }
+            .studycard-container {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>Matching Game</h1>
+    <h1>Printable Studycards</h1>
     <input type="file" id="fileInput" class="upload-btn" accept=".txt">
-    <div class="container">
-        <div class="questions" id="questions"></div>
-        <canvas class="line-canvas" id="lineCanvas"></canvas>
-        <div class="answers" id="answers"></div>
-    </div>
+    <button class="print-btn" onclick="window.print()">Print Studycards</button>
+    <div id="studycardContainer" class="studycard-container"></div>
 
     <script>
-        let questionsList = [];
-        let answersList = [];
-        let startElement = null;
-        let canvas, ctx;
-
         document.getElementById('fileInput').addEventListener('change', handleFileUpload);
 
         function handleFileUpload(event) {
@@ -79,85 +82,53 @@
 
             reader.onload = function(e) {
                 let content = e.target.result;
-                const pairs = parseSmartExamFormat(content);
-                displayQuestionsAndAnswers(pairs);
-                setupCanvas();
+                content = cleanUpContent(content);
+                const studycards = parseSmartExamFormat(content);
+                displayStudycards(studycards);
             };
 
             reader.readAsText(file);
         }
 
+        function cleanUpContent(content) {
+            return content.split('\n').map(line => {
+                if (line.trim().startsWith('[')) {
+                    return line.replace(/\[\s*\*?\s*\]\s*/g, '').replace(/^\s*-\s*/, '-').trim();
+                }
+                return line;
+            }).join('\n');
+        }
+
         function parseSmartExamFormat(content) {
             const questions = content.trim().split(/\n\s*\n/);
-            const pairs = questions.map(block => {
+            return questions.map(block => {
                 const lines = block.trim().split('\n');
-                const question = lines[0] || "No question available";
+                const question = formatQuestion(lines[0] || "No question available");
                 const correctAnswerLine = lines.find(line => line.startsWith('-*'));
                 const correctAnswer = correctAnswerLine ? correctAnswerLine.substring(3).trim() : "No correct answer provided";
-                return { question, answer: correctAnswer };
-            }).filter(pair => pair.question && pair.answer);
-
-            // Shuffle answers to make it challenging
-            questionsList = pairs.map(pair => pair.question);
-            answersList = pairs.map(pair => pair.answer).sort(() => Math.random() - 0.5);
-            return pairs;
+                return { question, correctAnswer };
+            }).filter(studycard => studycard.question && studycard.correctAnswer);
         }
 
-        function displayQuestionsAndAnswers(pairs) {
-            const questionsContainer = document.getElementById('questions');
-            const answersContainer = document.getElementById('answers');
-            questionsContainer.innerHTML = '';
-            answersContainer.innerHTML = '';
+        function formatQuestion(text) {
+            const imageRegex = /!?\[(.*?)\]\((.*?)\)/g;
+            return text.replace(imageRegex, (match, altText, url) => `<img src="${url}" alt="${altText}" style="max-width:100%; max-height:150px; margin-top:10px;">`);
+        }
 
-            questionsList.forEach((question, index) => {
-                const questionDiv = document.createElement('div');
-                questionDiv.textContent = question;
-                questionDiv.dataset.index = index;
-                questionDiv.onclick = () => handleSelection(questionDiv, 'question');
-                questionsContainer.appendChild(questionDiv);
+        function displayStudycards(studycards) {
+            const container = document.getElementById('studycardContainer');
+            container.innerHTML = '';
+
+            studycards.forEach(studycard => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'studycard';
+                cardElement.innerHTML = `
+                    <div class="question">${studycard.question}</div>
+                    <div class="dotted-line"></div>
+                    <div class="answer">${studycard.correctAnswer}</div>
+                `;
+                container.appendChild(cardElement);
             });
-
-            answersList.forEach((answer, index) => {
-                const answerDiv = document.createElement('div');
-                answerDiv.textContent = answer;
-                answerDiv.dataset.index = index;
-                answerDiv.onclick = () => handleSelection(answerDiv, 'answer');
-                answersContainer.appendChild(answerDiv);
-            });
-        }
-
-        function handleSelection(element, type) {
-            if (type === 'question') {
-                startElement = element;
-            } else if (startElement) {
-                drawLine(startElement, element);
-                startElement = null; // Reset for the next selection
-            }
-        }
-
-        function setupCanvas() {
-            canvas = document.getElementById('lineCanvas');
-            canvas.width = document.querySelector('.container').offsetWidth;
-            canvas.height = document.querySelector('.container').offsetHeight;
-            ctx = canvas.getContext('2d');
-            ctx.strokeStyle = '#00bcd4';
-            ctx.lineWidth = 2;
-        }
-
-        function drawLine(startElement, endElement) {
-            const startRect = startElement.getBoundingClientRect();
-            const endRect = endElement.getBoundingClientRect();
-            const containerRect = document.querySelector('.container').getBoundingClientRect();
-
-            const startX = startRect.right - containerRect.left;
-            const startY = startRect.top + startRect.height / 2 - containerRect.top;
-            const endX = endRect.left - containerRect.left;
-            const endY = endRect.top + endRect.height / 2 - containerRect.top;
-
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
         }
     </script>
 </body>
