@@ -65,17 +65,17 @@ SEF is uniquely structured with two distinct states:
 **Input State Example:**
 ```
 What is 2 + 2?
-- 4
+-* 4
 - 3
--* 5
+- 5
 ```
 
 **Executed State Example:**
 ```
 What is 2 + 2?
-[*] - 4
+[] -* 4
 [] - 3
-[] -* 5
+[*] - 5
 ```
 
 ---
