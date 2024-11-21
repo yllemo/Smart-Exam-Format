@@ -30,9 +30,9 @@ The Input State is the original format used when presenting the exam to learners
 **Example of Input State**:
 ```
 What is 2 + 2?
-- 4
+-* 4
 - 3
--* 5
+- 5
 
 What is the capital of France?
 -* Paris
@@ -57,9 +57,9 @@ The Executed State records user responses and is used for performance tracking a
 **Example of Executed State**:
 ```
 What is 2 + 2?
-[*] - 4
+[] -* 4
 [] - 3
-[] -* 5
+[*] - 5
 
 What is the capital of France?
 [*] -* Paris
