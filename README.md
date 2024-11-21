@@ -3,6 +3,8 @@
 
 The **Smart Exam Format (SEF)** offers a practical and innovative way to use plain text `.txt` files for creating exams. SEF is designed to provide diminishing returns and detailed analytics, with formatted sample outputs and AI-generated questions based on exam results. This approach ensures a continuous cycle of learning and improvement. SEF includes several examples of exam simulators, AI prompt outputs that can be pasted into any AI chatbot, and code samples for integrating with popular AI APIs. As a free and open format, SEF can be used and adapted to meet specific needs, making it a valuable tool for learners, educators, and developers.
 
+![Smart Exam Format Exams Overview](docs/images/smart_exam_format_exams_overview.png)
+
 ![Smart Exam Format Overview](docs/images/smart_exam_format_overview.png)
 
 Explore our samples and exam simulators to see how SEF can transform your learning experience!
